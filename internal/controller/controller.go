@@ -15,7 +15,7 @@ func RegisterRoutes(route chi.Router) {
 		r.Route("/book", func(subRoute chi.Router) {
 			subRoute.Use(middleware.Authorization)
 			subRoute.Get("/random", service.GetBookRandom)
-			subRoute.Get("/{bookId}", service.GetMock)
+			subRoute.Get("/{bookId}", service.GetBookByID)
 		})
 	})
 }

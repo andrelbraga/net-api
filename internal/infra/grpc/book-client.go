@@ -8,7 +8,6 @@ import (
 )
 
 func NewBookClient() (*grpc.ClientConn, error) {
-	// var opts []grpc.DialOption
 	conn, err := grpc.Dial("localhost:5001", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Print(err.Error())

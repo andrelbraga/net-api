@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"net-api.com/internal/domain/entities"
 	"net-api.com/internal/infra/grpc"
@@ -34,14 +33,15 @@ func GetHash(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetBookRandom(w http.ResponseWriter, r *http.Request) {
+	hash := r.Header.Get("Api-Key")
+
 	conn, err := grpc.NewBookClient()
 	if err != nil {
 		log.Print(err.Error())
 	}
 
 	client := pb.NewPrivateBookServiceClient(conn)
-	empty := &emptypb.Empty{}
-	stream, err := client.GetRandomBook(context.Background(), empty)
+	stream, err := client.GetRandomBook(context.Background(), &pb.GetBookRandomRequest{ApiKey: hash})
 	defer conn.Close()
 
 	if err != nil {
@@ -65,13 +65,15 @@ func GetBookRandom(w http.ResponseWriter, r *http.Request) {
 
 func GetBookByID(w http.ResponseWriter, r *http.Request) {
 	bookIdParam := chi.URLParam(r, "bookId")
+	hash := r.Header.Get("Api-Key")
+
 	conn, err := grpc.NewBookClient()
 	if err != nil {
 		log.Print(err.Error())
 	}
 
 	b := pb.NewPrivateBookServiceClient(conn)
-	book, err := b.GetBookDetail(context.Background(), &pb.GetBookDetailsRequest{BookId: bookIdParam})
+	book, err := b.GetBookDetail(context.Background(), &pb.GetBookDetailsRequest{ApiKey: hash, BookId: bookIdParam})
 	defer conn.Close()
 
 	if err != nil {
@@ -88,24 +90,3 @@ func GetMD5Hash(text string) string {
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
-
-func GetMock(w http.ResponseWriter, r *http.Request) {
-	var book []map[string]interface{}
-
-	for i := 0; i < 10; i++ {
-		item := make(map[string]interface{})
-		item["id"] = i
-		item["name"] = fmt.Sprintf("Item %d", i)
-		book = append(book, item)
-	}
-	data, _ := json.Marshal(book)
-
-	w.Write([]byte(data))
-}
-
-/*
-	Variables: actual_book, latest_book
-	First call: latest_book = empty, actual_book: true
-	Condicao para validar se os livros nao estao entre os ultimos 10 solicitados
-	Validar através do hash
-*/
