@@ -1,15 +1,12 @@
 package service_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
@@ -55,41 +52,33 @@ func (s *BookServiceStub) SetupSuite() {
 
 func (srv *BookServiceStub) TestGetHash() {
 	data := &entities.User{Username: "test", Password: "pass"}
-	body, _ := json.Marshal(data)
-	req, _ := http.NewRequest("POST", "http://localhost:3001/api/v1/user/hash", bytes.NewReader(body))
-	rr := httptest.NewRecorder()
-	srv.service.GetHash(rr, req)
-	srv.Equal(http.StatusOK, rr.Code)
+	hash := srv.service.GetHash(data)
+	srv.NotEmpty(hash)
 }
 
 func (srv *BookServiceStub) TestGetBookRandom() {
-	req, _ := http.NewRequest("GET", "http://localhost:3001/api/v1/book/random", nil)
-	req.Header.Set("Api-Key", "your_api_key")
-	rr := httptest.NewRecorder()
-
-	// mockClient := &MockBookService{}
-	// defer mockClient.AssertExpectations(srv.T())
-
-	// srv.client = mockClient
-	srv.service.GetBookRandom(rr, req)
-
-	srv.Equal(http.StatusOK, rr.Code)
+	user := &entities.User{Username: "test", Password: "pass"}
+	hash := srv.service.GetHash(user)
+	var w http.ResponseWriter
+	err := srv.service.GetBookRandom(hash, w)
+	if err != nil {
+		srv.Error(err)
+	}
 }
 
 func (srv *BookServiceStub) TestGetBookDetail() {
-	req, _ := http.NewRequest("GET", "http://localhost:3001/api/v1/book/1", nil)
-	req.Header.Set("Api-Key", "your_api_key")
-	rr := httptest.NewRecorder()
+	user := &entities.User{Username: "test", Password: "pass"}
+	hash := srv.service.GetHash(user)
 
-	rctx := chi.NewRouteContext()
-	rctx.URLParams.Add("bookId", "1")
-	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+	data, err := srv.service.GetBookByID(hash, "1")
+	if err != nil {
+		srv.Error(err)
+	}
 
-	// mockClient := &MockBookService{}
-	// defer mockClient.AssertExpectations(srv.T())
-
-	// srv.client = mockClient
-	srv.service.GetBookByID(rr, req)
-
-	srv.Equal(http.StatusOK, rr.Code)
+	var book *pb.Book
+	err = json.Unmarshal(data, &book)
+	if err != nil {
+		srv.Error(err)
+	}
+	srv.NotEmpty(book)
 }

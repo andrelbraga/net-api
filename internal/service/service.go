@@ -10,8 +10,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi"
-
 	"net-api.com/internal/domain/entities"
 
 	pb "net-api.com/internal/infra/grpc/proto"
@@ -30,26 +28,18 @@ func NewBookService(client pb.PrivateBookServiceClient) *BookService {
 }
 
 // GetHash
-func (bsrv *BookService) GetHash(w http.ResponseWriter, r *http.Request) {
-	user := &entities.User{}
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+func (bsrv *BookService) GetHash(user *entities.User) string {
 	s := fmt.Sprintf("%s:%s", user.Username, user.Password)
 	h := getMD5Hash(s)
-	w.Write([]byte(h))
+	return h
 }
 
 // GetBookRandom
-func (bsrv *BookService) GetBookRandom(w http.ResponseWriter, r *http.Request) {
-	hash := r.Header.Get("Api-Key")
+func (bsrv *BookService) GetBookRandom(hash string, w http.ResponseWriter) error {
 
 	stream, err := bsrv.client.GetRandomBook(context.Background(), &pb.GetBookRandomRequest{ApiKey: hash})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return err
 	}
 
 	for {
@@ -64,21 +54,18 @@ func (bsrv *BookService) GetBookRandom(w http.ResponseWriter, r *http.Request) {
 		data, _ := json.Marshal(book)
 		w.Write(data)
 	}
+	return nil
 }
 
 // GetBookByID
-func (bsrv *BookService) GetBookByID(w http.ResponseWriter, r *http.Request) {
-	bookIdParam := chi.URLParam(r, "bookId")
-	hash := r.Header.Get("Api-Key")
-
+func (bsrv *BookService) GetBookByID(hash, bookIdParam string) ([]byte, error) {
 	book, err := bsrv.client.GetBookDetail(context.Background(), &pb.GetBookDetailsRequest{ApiKey: hash, BookId: bookIdParam})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 
 	data, _ := json.Marshal(book.Book)
-	w.Write(data)
+	return data, nil
 }
 
 func getMD5Hash(text string) string {
