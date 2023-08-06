@@ -6,16 +6,19 @@ import (
 	"net-api.com/internal/service"
 )
 
+// BooksController
 type BooksController struct {
 	srv *service.BookService
 }
 
+// NewBooksController
 func NewBooksController(srv *service.BookService) *BooksController {
 	return &BooksController{
 		srv: srv,
 	}
 }
 
+// RegisterRoutes
 func (ctrl *BooksController) RegisterRoutes(route chi.Router) {
 	route.Route("/api/v1", func(r chi.Router) {
 		r.Route("/user", func(subRoute chi.Router) {

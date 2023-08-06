@@ -17,16 +17,19 @@ import (
 	pb "net-api.com/internal/infra/grpc/proto"
 )
 
+// BookService
 type BookService struct {
 	client pb.PrivateBookServiceClient
 }
 
+// NewBookService
 func NewBookService(client pb.PrivateBookServiceClient) *BookService {
 	return &BookService{
 		client: client,
 	}
 }
 
+// GetHash
 func (bsrv *BookService) GetHash(w http.ResponseWriter, r *http.Request) {
 	user := &entities.User{}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -39,6 +42,7 @@ func (bsrv *BookService) GetHash(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(h))
 }
 
+// GetBookRandom
 func (bsrv *BookService) GetBookRandom(w http.ResponseWriter, r *http.Request) {
 	hash := r.Header.Get("Api-Key")
 
@@ -62,6 +66,7 @@ func (bsrv *BookService) GetBookRandom(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetBookByID
 func (bsrv *BookService) GetBookByID(w http.ResponseWriter, r *http.Request) {
 	bookIdParam := chi.URLParam(r, "bookId")
 	hash := r.Header.Get("Api-Key")

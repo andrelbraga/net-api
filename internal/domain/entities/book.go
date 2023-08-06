@@ -1,5 +1,6 @@
 package entities
 
+// Book
 type Book struct {
 	ID            string         `json:"id"`
 	Title         string         `json:"title"`
@@ -12,6 +13,7 @@ type Book struct {
 	Description   *string        `json:"description"`
 }
 
+// BookImageLinks
 type BookImageLinks struct {
 	SmallThumbnail string `json:"small_thumbnail"`
 	Thumbnail      string `json:"thumbnail"`
