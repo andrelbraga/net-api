@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	"net-api.com/internal/controller"
@@ -61,20 +62,25 @@ func (stub *BookControllerStub) TestGetBookByIDCtrl() {
 	hash := "any_hash"
 	paramId := "1"
 
-	req, _ := http.NewRequest("GET", "http://localhost:9191/api/v1/book/1", nil)
-	req.Header.Set("Api-Key", hash)
-	rr := httptest.NewRecorder()
-
 	book := createBookDetail(paramId)
 	data, _ := json.Marshal(book.Book)
 
 	// Mock
 	stub.mockSrv.EXPECT().GetBookByID(hash, paramId).Return(data, nil).Times(1)
 
+	// Setup router
+	router := chi.NewRouter()
+	router.HandleFunc("/api/v1/book/{id}", stub.ctrl.GetBookByIDCtrl)
+	req, _ := http.NewRequest("GET", "http://localhost:9191/api/v1/book/1", nil)
+	req.Header.Set("Api-Key", hash)
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	// Get method controller -> Method TEST
 	stub.ctrl.GetBookByIDCtrl(rr, req)
 
 	// Assertions
-	stub.Equal(http.StatusBadRequest, rr.Code)
+	stub.Equal(http.StatusOK, rr.Code)
 }
 
 func createBookDetail(id string) *pb.GetBookDetailsResponse {

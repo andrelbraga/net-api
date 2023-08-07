@@ -1,13 +1,11 @@
 package service_test
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
 	"net-api.com/internal/domain/entities"
@@ -16,23 +14,8 @@ import (
 	"net-api.com/internal/service"
 )
 
-type MockBookService struct {
-	mock.Mock
-}
-
-func (m *MockBookService) GetRandomBook(ctx context.Context, in *pb.GetBookRandomRequest) (pb.PrivateBookService_GetRandomBookClient, error) {
-	args := m.Called(ctx, in)
-	return args.Get(0).(pb.PrivateBookService_GetRandomBookClient), args.Error(1)
-}
-
-func (m *MockBookService) GetBookDetail(ctx context.Context, in *pb.GetBookDetailsRequest) (*pb.GetBookDetailsResponse, error) {
-	args := m.Called(ctx, in)
-	return args.Get(0).(*pb.GetBookDetailsResponse), args.Error(1)
-}
-
 type BookServiceStub struct {
 	suite.Suite
-	// client  *MockBookService
 	service *service.BookService
 }
 
