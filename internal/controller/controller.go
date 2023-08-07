@@ -6,16 +6,21 @@ import (
 
 	"github.com/go-chi/chi"
 	"net-api.com/internal/domain/entities"
-	"net-api.com/internal/service"
 )
+
+type BookServiceInterface interface {
+	GetBookByID(hash string, bookIdParam string) ([]byte, error)
+	GetBookRandom(hash string, w http.ResponseWriter) error
+	GetHash(user *entities.User) string
+}
 
 // BooksController
 type BooksController struct {
-	*service.BookService
+	BookServiceInterface
 }
 
 // NewBooksController
-func NewBooksController(srv *service.BookService) *BooksController {
+func NewBooksController(srv BookServiceInterface) *BooksController {
 	return &BooksController{
 		srv,
 	}
@@ -91,7 +96,7 @@ func (srv *BooksController) GetBookByIDCtrl(w http.ResponseWriter, r *http.Reque
 
 	bookIdParam := chi.URLParam(r, "id")
 	if bookIdParam == "" {
-		http.Error(w, "param {bookId} not found", http.StatusBadRequest)
+		http.Error(w, "param {id} not found", http.StatusBadRequest)
 		return
 	}
 
